@@ -4,10 +4,13 @@ from database import get_db
 import models
 from pydantic import BaseModel
 import anthropic
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 router = APIRouter(prefix="/ai", tags=["AI"])
-client = anthropic.Anthropic(api_key="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")
-
+client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 # --- Data shapes ---
 class RecommendRequest(BaseModel):
     occasion: str
