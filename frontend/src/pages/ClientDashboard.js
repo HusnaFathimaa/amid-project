@@ -22,6 +22,7 @@ function ClientDashboard() {
   useEffect(() => {
     fetchDresses();
     fetchMyBookings();
+    // eslint-disable-next-line
   }, []);
 
   const fetchDresses = async () => {

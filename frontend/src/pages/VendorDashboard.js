@@ -19,6 +19,7 @@ function VendorDashboard() {
   useEffect(() => {
     fetchMyDresses();
     fetchBookings();
+    // eslint-disable-next-line
   }, []);
 
   const fetchMyDresses = async () => {
