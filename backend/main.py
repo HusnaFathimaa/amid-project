@@ -10,7 +10,10 @@ app = FastAPI(title="AmId API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://amid-project-8ifkbux5k-husna-fathimaa-a-s-projects.vercel.app"
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )

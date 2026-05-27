@@ -13,7 +13,7 @@ function Login() {
 
   const handleSubmit = async () => {
     try {
-      const res = await axios.post("http://localhost:8000/auth/login", form);
+      const res = await axios.post("https://amid-project.onrender.com/auth/login", form);
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("role", res.data.role);
       localStorage.setItem("name", res.data.name);

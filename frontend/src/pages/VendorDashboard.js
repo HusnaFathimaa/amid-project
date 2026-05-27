@@ -24,14 +24,14 @@ function VendorDashboard() {
 
   const fetchMyDresses = async () => {
     try {
-      const res = await axios.get(`http://localhost:8000/dresses/vendor/${vendor_id}`);
+      const res = await axios.get(`https://amid-project.onrender.com/dresses/vendor/${vendor_id}`);
       setMyDresses(res.data);
     } catch (err) { console.log(err); }
   };
 
   const fetchBookings = async () => {
     try {
-      const res = await axios.get(`http://localhost:8000/bookings/vendor/${vendor_id}`);
+      const res = await axios.get(`https://amid-project.onrender.com/bookings/vendor/${vendor_id}`);
       setBookings(res.data);
     } catch (err) { console.log(err); }
   };
@@ -42,7 +42,7 @@ function VendorDashboard() {
 
   const handleUpload = async () => {
     try {
-      await axios.post("http://localhost:8000/dresses/upload", {
+      await axios.post("https://amid-project.onrender.com/dresses/upload", {
         ...form,
         price_per_day: parseFloat(form.price_per_day),
         delivery_days: parseInt(form.delivery_days),
@@ -59,7 +59,7 @@ function VendorDashboard() {
   
   const handleApproval = async (booking_id, status) => {
     try {
-      await axios.put(`http://localhost:8000/bookings/update/${booking_id}?status=${status}`);
+      await axios.put(`https://amid-project.onrender.com/bookings/update/${booking_id}?status=${status}`);
       fetchBookings();
     } catch (err) { console.log(err); }
   };

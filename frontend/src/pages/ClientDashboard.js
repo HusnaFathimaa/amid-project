@@ -27,14 +27,14 @@ function ClientDashboard() {
 
   const fetchDresses = async () => {
     try {
-      const res = await axios.get("http://localhost:8000/dresses/all");
+      const res = await axios.get("https://amid-project.onrender.com/dresses/all");
       setDresses(res.data);
     } catch (err) { console.log(err); }
   };
 
   const fetchMyBookings = async () => {
     try {
-      const res = await axios.get(`http://localhost:8000/bookings/client/${client_id}`);
+      const res = await axios.get(`https://amid-project.onrender.com/bookings/client/${client_id}`);
       setMyBookings(res.data);
     } catch (err) { console.log(err); }
   };
@@ -57,7 +57,7 @@ function ClientDashboard() {
       const total = calculateTotal();
       if (total <= 0) { setMessage("Please select valid dates."); return; }
       if (!bookingForm.delivery_address) { setMessage("Please enter delivery address."); return; }
-      await axios.post("http://localhost:8000/bookings/create", {
+      await axios.post("https://amid-project.onrender.com/bookings/create", {
         client_id: parseInt(client_id),
         dress_id: selectedDress.id,
         rental_start: bookingForm.rental_start,
@@ -82,7 +82,7 @@ function ClientDashboard() {
     setAiLoading(true);
     setAiRecommendation("");
     try {
-      const res = await axios.post("http://localhost:8000/ai/recommend", {
+      const res = await axios.post("https://amid-project.onrender.com/ai/recommend", {
         occasion: aiQuestion.occasion,
         budget: parseFloat(aiQuestion.budget),
         style: aiQuestion.style

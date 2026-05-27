@@ -13,7 +13,7 @@ function Signup() {
 
   const handleSubmit = async () => {
     try {
-      await axios.post("http://localhost:8000/auth/signup", form);      setMessage("Account created! Redirecting to login...");
+      await axios.post("https://amid-project.onrender.com/auth/signup", form);      setMessage("Account created! Redirecting to login...");
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
       setMessage(err.response?.data?.detail || "Something went wrong");
