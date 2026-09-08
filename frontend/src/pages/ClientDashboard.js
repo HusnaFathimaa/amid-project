@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import logo from "./logo.jpg";
 
 function ClientDashboard() {
   const navigate = useNavigate();
@@ -100,10 +101,20 @@ function ClientDashboard() {
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <h2 style={styles.logo}>AmId</h2>
+        <div style={styles.logoRow}>
+          <img src={logo} alt="AmId" style={styles.headerLogo} />
+          <h2 style={styles.logo}>AmId</h2>
+        </div>
         <div style={styles.headerRight}>
-          <span style={styles.welcome}>Welcome, {name} 👋</span>
-          <button style={styles.logoutBtn} onClick={logout}>Logout</button>
+          <span style={styles.welcome}>Welcome, {name}</span>
+          <button
+            style={styles.logoutBtn}
+            onClick={logout}
+            onMouseEnter={e => { e.target.style.background = "#C9A84C"; e.target.style.color = "#0D0D0D"; }}
+            onMouseLeave={e => { e.target.style.background = "transparent"; e.target.style.color = "#C9A84C"; }}
+          >
+            Logout
+          </button>
         </div>
       </div>
 
@@ -114,7 +125,7 @@ function ClientDashboard() {
         <button style={activeTab === "mybookings" ? styles.tabActive : styles.tab}
           onClick={() => setActiveTab("mybookings")}>My Bookings ({myBookings.length})</button>
         <button style={activeTab === "ai" ? styles.tabActive : styles.tab}
-          onClick={() => setActiveTab("ai")}>✨ AI Stylist</button>
+          onClick={() => setActiveTab("ai")}>AI Stylist</button>
       </div>
 
       <div style={styles.body}>
@@ -132,8 +143,13 @@ function ClientDashboard() {
                     <h4 style={styles.dressName}>{dress.name}</h4>
                     <p style={styles.dressDesc}>{dress.description}</p>
                     <p style={styles.dressPrice}>₹{dress.price_per_day}/day</p>
-                    <p style={styles.dressDelivery}>🚚 {dress.delivery_days} days delivery</p>
-                    <button style={styles.bookBtn} onClick={() => handleBook(dress)}>
+                    <p style={styles.dressDelivery}>Delivery in {dress.delivery_days} days</p>
+                    <button
+                      style={styles.bookBtn}
+                      onClick={() => handleBook(dress)}
+                      onMouseEnter={e => { e.target.style.background = "#B8922E"; }}
+                      onMouseLeave={e => { e.target.style.background = "#C9A84C"; }}
+                    >
                       Book Now
                     </button>
                   </div>
@@ -151,21 +167,34 @@ function ClientDashboard() {
             <p style={styles.dressPrice}>₹{selectedDress.price_per_day}/day</p>
             <label style={styles.label}>Rental Start Date</label>
             <input style={styles.input} type="date" value={bookingForm.rental_start}
-              onChange={e => setBookingForm({ ...bookingForm, rental_start: e.target.value })} />
+              onChange={e => setBookingForm({ ...bookingForm, rental_start: e.target.value })}
+              onFocus={e => e.target.style.borderColor = "#C9A84C"}
+              onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
             <label style={styles.label}>Rental End Date</label>
             <input style={styles.input} type="date" value={bookingForm.rental_end}
-              onChange={e => setBookingForm({ ...bookingForm, rental_end: e.target.value })} />
+              onChange={e => setBookingForm({ ...bookingForm, rental_end: e.target.value })}
+              onFocus={e => e.target.style.borderColor = "#C9A84C"}
+              onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
             <label style={styles.label}>Delivery Address</label>
             <textarea style={styles.textarea} placeholder="Enter your full delivery address"
               value={bookingForm.delivery_address}
-              onChange={e => setBookingForm({ ...bookingForm, delivery_address: e.target.value })} />
+              onChange={e => setBookingForm({ ...bookingForm, delivery_address: e.target.value })}
+              onFocus={e => e.target.style.borderColor = "#C9A84C"}
+              onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
             {calculateTotal() > 0 && (
               <div style={styles.totalBox}>Total: ₹{calculateTotal()}</div>
             )}
             {message && <p style={styles.message}>{message}</p>}
             <div style={{ display: "flex", gap: "10px" }}>
-              <button style={styles.backBtn} onClick={() => setActiveTab("browse")}>← Back</button>
-              <button style={styles.button} onClick={submitBooking}>Confirm Booking</button>
+              <button style={styles.backBtn} onClick={() => setActiveTab("browse")}>Back</button>
+              <button
+                style={styles.button}
+                onClick={submitBooking}
+                onMouseEnter={e => { e.target.style.background = "#B8922E"; }}
+                onMouseLeave={e => { e.target.style.background = "#C9A84C"; }}
+              >
+                Confirm Booking
+              </button>
             </div>
           </div>
         )}
@@ -181,15 +210,15 @@ function ClientDashboard() {
                   <img src={booking.dress_image} alt={booking.dress_name} style={styles.bookingImg} />
                   <div style={styles.bookingDetails}>
                     <h4 style={styles.bookingDress}>{booking.dress_name}</h4>
-                    <p style={styles.bookingMeta}>📅 {booking.rental_start} to {booking.rental_end}</p>
-                    <p style={styles.bookingMeta}>💰 ₹{booking.total_price}</p>
+                    <p style={styles.bookingMeta}>{booking.rental_start} to {booking.rental_end}</p>
+                    <p style={styles.bookingMeta}>₹{booking.total_price}</p>
                   </div>
                   <span style={{
                     ...styles.statusBadge,
-                    background: booking.status === "approved" ? "#e8f5e9" :
-                      booking.status === "rejected" ? "#ffebee" : "#fff8e1",
-                    color: booking.status === "approved" ? "#2e7d32" :
-                      booking.status === "rejected" ? "#c62828" : "#f57f17"
+                    background: booking.status === "approved" ? "rgba(46,125,50,0.15)" :
+                      booking.status === "rejected" ? "rgba(198,40,40,0.15)" : "rgba(201,168,76,0.15)",
+                    color: booking.status === "approved" ? "#4CAF50" :
+                      booking.status === "rejected" ? "#EF5350" : "#C9A84C"
                   }}>{booking.status.toUpperCase()}</span>
                 </div>
               </div>
@@ -200,28 +229,39 @@ function ClientDashboard() {
         {/* AI Stylist Tab */}
         {activeTab === "ai" && (
           <div style={styles.card}>
-            <h3 style={styles.cardTitle}>✨ AI Dress Stylist</h3>
-            <p style={{ color: "#888", fontSize: "13px", marginBottom: "20px" }}>
-              Answer 3 quick questions and our AI will recommend the perfect dress for you!
+            <h3 style={styles.cardTitle}>AI Dress Stylist</h3>
+            <p style={styles.aiIntro}>
+              Answer 3 quick questions and our AI will recommend the perfect dress for you.
             </p>
             <label style={styles.label}>What is the occasion?</label>
             <input style={styles.input} placeholder="e.g. wedding, birthday, festival"
               value={aiQuestion.occasion}
-              onChange={e => setAiQuestion({ ...aiQuestion, occasion: e.target.value })} />
+              onChange={e => setAiQuestion({ ...aiQuestion, occasion: e.target.value })}
+              onFocus={e => e.target.style.borderColor = "#C9A84C"}
+              onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
             <label style={styles.label}>Your budget per day (₹)</label>
             <input style={styles.input} type="number" placeholder="e.g. 2000"
               value={aiQuestion.budget}
-              onChange={e => setAiQuestion({ ...aiQuestion, budget: e.target.value })} />
+              onChange={e => setAiQuestion({ ...aiQuestion, budget: e.target.value })}
+              onFocus={e => e.target.style.borderColor = "#C9A84C"}
+              onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
             <label style={styles.label}>Style preference</label>
             <input style={styles.input} placeholder="e.g. traditional, modern, elegant"
               value={aiQuestion.style}
-              onChange={e => setAiQuestion({ ...aiQuestion, style: e.target.value })} />
-            <button style={styles.button} onClick={getAiRecommendation}>
-              {aiLoading ? "Finding your perfect dress... 🔍" : "Get AI Recommendation ✨"}
+              onChange={e => setAiQuestion({ ...aiQuestion, style: e.target.value })}
+              onFocus={e => e.target.style.borderColor = "#C9A84C"}
+              onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
+            <button
+              style={styles.button}
+              onClick={getAiRecommendation}
+              onMouseEnter={e => { e.target.style.background = "#B8922E"; }}
+              onMouseLeave={e => { e.target.style.background = "#C9A84C"; }}
+            >
+              {aiLoading ? "Finding your perfect dress..." : "Get AI Recommendation"}
             </button>
             {aiRecommendation && (
               <div style={styles.aiResult}>
-                <p style={{ margin: 0, lineHeight: "1.7", fontSize: "14px" }}>
+                <p style={styles.aiResultText}>
                   {aiRecommendation}
                 </p>
               </div>
@@ -235,45 +275,97 @@ function ClientDashboard() {
 }
 
 const styles = {
-  container: { minHeight: "100vh", background: "#f8f4f0" },
-  header: { background: "white", padding: "16px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" },
-  logo: { color: "#c0392b", margin: 0, fontSize: "24px" },
-  headerRight: { display: "flex", alignItems: "center", gap: "16px" },
-  welcome: { fontSize: "14px", color: "#555" },
-  logoutBtn: { padding: "8px 16px", background: "#c0392b", color: "white", border: "none", borderRadius: "8px", cursor: "pointer" },
-  tabBar: { background: "white", padding: "0 32px", display: "flex", gap: "4px", borderBottom: "1px solid #eee" },
-  tab: { padding: "14px 20px", background: "none", border: "none", cursor: "pointer", color: "#888", fontSize: "14px" },
-  tabActive: { padding: "14px 20px", background: "none", border: "none", borderBottom: "2px solid #c0392b", cursor: "pointer", color: "#c0392b", fontWeight: "600", fontSize: "14px" },
+  container: { minHeight: "100vh", background: "#FAF8F4", fontFamily: "'Arial', sans-serif" },
+  header: {
+    background: "#0D0D0D", padding: "16px 32px", display: "flex",
+    justifyContent: "space-between", alignItems: "center",
+    boxShadow: "0 2px 12px rgba(0,0,0,0.3)"
+  },
+  logoRow: { display: "flex", alignItems: "center", gap: "12px" },
+  headerLogo: { width: "36px", height: "36px", objectFit: "contain" },
+  logo: { color: "#C9A84C", margin: 0, fontSize: "22px", fontFamily: "'Georgia', serif", letterSpacing: "1px" },
+  headerRight: { display: "flex", alignItems: "center", gap: "20px" },
+  welcome: { fontSize: "13px", color: "#AAA" },
+  logoutBtn: {
+    padding: "8px 18px", background: "transparent", color: "#C9A84C",
+    border: "1px solid #C9A84C", borderRadius: "4px", cursor: "pointer",
+    fontSize: "12px", letterSpacing: "1px", textTransform: "uppercase",
+    fontWeight: "700", transition: "all 0.2s"
+  },
+  tabBar: { background: "#161616", padding: "0 32px", display: "flex", gap: "4px", borderBottom: "1px solid #2A2A2A" },
+  tab: {
+    padding: "16px 20px", background: "none", border: "none", borderBottom: "2px solid transparent",
+    cursor: "pointer", color: "#888", fontSize: "13px", letterSpacing: "0.5px",
+    textTransform: "uppercase", fontWeight: "600"
+  },
+  tabActive: {
+    padding: "16px 20px", background: "none", border: "none", borderBottom: "2px solid #C9A84C",
+    cursor: "pointer", color: "#C9A84C", fontWeight: "700", fontSize: "13px",
+    letterSpacing: "0.5px", textTransform: "uppercase"
+  },
   body: { padding: "32px" },
-  sectionTitle: { margin: "0 0 20px", fontSize: "18px", color: "#333" },
-  card: { background: "white", padding: "32px", borderRadius: "12px", maxWidth: "500px" },
-  cardTitle: { margin: "0 0 16px", fontSize: "18px", color: "#333" },
-  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "16px" },
-  dressCard: { background: "white", borderRadius: "12px", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" },
+  sectionTitle: { margin: "0 0 24px", fontSize: "20px", color: "#0D0D0D", fontFamily: "'Georgia', serif", fontWeight: "600" },
+  card: { background: "#FFFFFF", padding: "36px", borderRadius: "6px", maxWidth: "500px", border: "1px solid #EDE7DA" },
+  cardTitle: { margin: "0 0 20px", fontSize: "20px", color: "#0D0D0D", fontFamily: "'Georgia', serif", fontWeight: "600" },
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "20px" },
+  dressCard: { background: "#FFFFFF", borderRadius: "6px", overflow: "hidden", border: "1px solid #EDE7DA" },
   dressImg: { width: "100%", height: "200px", objectFit: "cover" },
   dressInfo: { padding: "16px" },
-  dressName: { margin: "0 0 6px", fontSize: "15px", color: "#333" },
-  dressDesc: { margin: "0 0 8px", color: "#888", fontSize: "13px", lineHeight: "1.4" },
-  dressPrice: { margin: "0 0 4px", color: "#c0392b", fontWeight: "600" },
-  dressDelivery: { margin: "0 0 12px", color: "#888", fontSize: "13px" },
-  bookBtn: { width: "100%", padding: "10px", background: "#c0392b", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "600" },
-  preview: { width: "100%", height: "180px", objectFit: "cover", borderRadius: "8px", marginBottom: "12px" },
-  label: { display: "block", fontSize: "13px", color: "#555", marginBottom: "4px", fontWeight: "500" },
-  input: { width: "100%", padding: "12px", marginBottom: "12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "14px", boxSizing: "border-box" },
-  textarea: { width: "100%", padding: "12px", marginBottom: "12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "14px", boxSizing: "border-box", height: "80px" },
-  totalBox: { background: "#fef9f9", border: "1px solid #c0392b", borderRadius: "8px", padding: "12px 16px", marginBottom: "16px", color: "#c0392b", fontWeight: "700", fontSize: "16px" },
-  button: { width: "100%", padding: "14px", background: "#c0392b", color: "white", border: "none", borderRadius: "8px", fontSize: "15px", cursor: "pointer", marginBottom: "8px" },
-  backBtn: { padding: "14px 20px", background: "#f5f5f5", color: "#555", border: "none", borderRadius: "8px", fontSize: "15px", cursor: "pointer" },
-  message: { textAlign: "center", color: "#c0392b", marginBottom: "12px" },
-  bookingCard: { background: "white", borderRadius: "12px", padding: "16px", marginBottom: "12px", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" },
+  dressName: { margin: "0 0 8px", fontSize: "15px", color: "#0D0D0D", fontFamily: "'Georgia', serif" },
+  dressDesc: { margin: "0 0 10px", color: "#888", fontSize: "13px", lineHeight: "1.4" },
+  dressPrice: { margin: "0 0 6px", color: "#C9A84C", fontWeight: "700" },
+  dressDelivery: { margin: "0 0 14px", color: "#888", fontSize: "13px" },
+  bookBtn: {
+    width: "100%", padding: "11px", background: "#C9A84C", color: "#0D0D0D",
+    border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "700",
+    fontSize: "12px", letterSpacing: "1.5px", textTransform: "uppercase", transition: "background 0.2s"
+  },
+  preview: { width: "100%", height: "200px", objectFit: "cover", borderRadius: "4px", marginBottom: "18px", border: "1px solid #EDE7DA" },
+  label: {
+    display: "block", fontSize: "12px", color: "#555", marginBottom: "6px",
+    fontWeight: "600", letterSpacing: "1.5px", textTransform: "uppercase"
+  },
+  input: {
+    width: "100%", padding: "14px 16px", marginBottom: "18px", borderRadius: "4px",
+    border: "1px solid #2A2A2A", background: "#FFFFFF", fontSize: "14px",
+    boxSizing: "border-box", color: "#0D0D0D", outline: "none", transition: "border-color 0.2s"
+  },
+  textarea: {
+    width: "100%", padding: "14px 16px", marginBottom: "18px", borderRadius: "4px",
+    border: "1px solid #2A2A2A", background: "#FFFFFF", fontSize: "14px",
+    boxSizing: "border-box", color: "#0D0D0D", outline: "none", height: "90px",
+    resize: "vertical", transition: "border-color 0.2s", fontFamily: "'Arial', sans-serif"
+  },
+  totalBox: {
+    background: "rgba(201,168,76,0.1)", border: "1px solid #C9A84C", borderRadius: "4px",
+    padding: "14px 18px", marginBottom: "18px", color: "#0D0D0D", fontWeight: "700", fontSize: "16px"
+  },
+  button: {
+    width: "100%", padding: "16px", background: "#C9A84C", color: "#0D0D0D",
+    border: "none", borderRadius: "4px", fontSize: "13px", cursor: "pointer",
+    letterSpacing: "2px", textTransform: "uppercase", fontWeight: "700",
+    marginBottom: "8px", transition: "all 0.2s"
+  },
+  backBtn: {
+    padding: "16px 24px", background: "transparent", color: "#555",
+    border: "1px solid #DDD", borderRadius: "4px", fontSize: "13px",
+    cursor: "pointer", letterSpacing: "1px", textTransform: "uppercase", fontWeight: "600"
+  },
+  message: { textAlign: "center", color: "#C9A84C", marginBottom: "12px", fontSize: "13px" },
+  bookingCard: { background: "#FFFFFF", borderRadius: "6px", padding: "18px", marginBottom: "14px", border: "1px solid #EDE7DA" },
   bookingRow: { display: "flex", gap: "16px", alignItems: "center" },
-  bookingImg: { width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px" },
+  bookingImg: { width: "80px", height: "80px", objectFit: "cover", borderRadius: "4px" },
   bookingDetails: { flex: 1 },
-  bookingDress: { margin: "0 0 4px", fontSize: "15px", color: "#333" },
-  bookingMeta: { margin: "0 0 2px", fontSize: "13px", color: "#888" },
-  statusBadge: { padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: "700", whiteSpace: "nowrap" },
-  empty: { color: "#aaa", textAlign: "center", padding: "60px" },
-  aiResult: { background: "#fef9f9", border: "1px solid #c0392b", borderRadius: "8px", padding: "16px", marginTop: "16px" }
+  bookingDress: { margin: "0 0 6px", fontSize: "15px", color: "#0D0D0D", fontFamily: "'Georgia', serif" },
+  bookingMeta: { margin: "0 0 3px", fontSize: "13px", color: "#888" },
+  statusBadge: { padding: "6px 14px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", letterSpacing: "0.5px", whiteSpace: "nowrap" },
+  empty: { color: "#AAA", textAlign: "center", padding: "60px", fontSize: "14px" },
+  aiIntro: { color: "#888", fontSize: "13px", marginBottom: "24px", lineHeight: "1.6" },
+  aiResult: {
+    background: "rgba(201,168,76,0.08)", border: "1px solid #C9A84C",
+    borderRadius: "4px", padding: "18px", marginTop: "18px"
+  },
+  aiResultText: { margin: 0, lineHeight: "1.7", fontSize: "14px", color: "#0D0D0D" }
 };
 
 export default ClientDashboard;
