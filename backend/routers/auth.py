@@ -70,3 +70,16 @@ def login(data: LoginData, db: Session = Depends(get_db)):
         "name": user.name,
         "user_id": user.id
     }
+class ResetData(BaseModel):
+    email: str
+    new_password: str
+
+@router.post("/reset-password")
+def reset_password(data: ResetData, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == data.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Email not found")
+    hashed = bcrypt.hashpw(data.new_password.encode("utf-8"), bcrypt.gensalt())
+    user.password_hash = hashed.decode("utf-8")
+    db.commit()
+    return {"message": "Password reset successfully!"}

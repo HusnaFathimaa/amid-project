@@ -5,26 +5,35 @@ import logo from "./logo.jpg";
 
 const API = "https://amid-project.onrender.com";
 
-function Login() {
+function ResetPassword() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: "", new_password: "", confirm: "" });
   const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async () => {
+    if (form.new_password !== form.confirm) {
+      setMessage("Passwords do not match");
+      return;
+    }
+    if (form.new_password.length < 6) {
+      setMessage("Password must be at least 6 characters");
+      return;
+    }
     setLoading(true);
     try {
-      const res = await axios.post(`${API}/auth/login`, form);
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("role", res.data.role);
-      localStorage.setItem("name", res.data.name);
-      localStorage.setItem("user_id", res.data.user_id);
-      if (res.data.role === "vendor") navigate("/vendor");
-      else navigate("/client");
+      await axios.post(`${API}/auth/reset-password`, {
+        email: form.email,
+        new_password: form.new_password
+      });
+      setSuccess(true);
+      setMessage("Password reset successfully!");
+      setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
-      setMessage(err.response?.data?.detail || "Login failed");
+      setMessage(err.response?.data?.detail || "Something went wrong");
     }
     setLoading(false);
   };
@@ -35,49 +44,47 @@ function Login() {
         <div style={s.leftOverlay}>
           <img src={logo} alt="AmId" style={s.leftLogo} />
           <p style={s.leftTagline}>Own The Look</p>
-          <p style={s.leftSub}>India's premier dress rental marketplace — where luxury meets accessibility.</p>
-          <div style={s.features}>
-            {["✦  Curated designer collection", "✦  AI-powered style guidance", "✦  Seamless rental experience"].map((f, i) => (
-              <p key={i} style={s.feature}>{f}</p>
-            ))}
-          </div>
+          <p style={s.leftSub}>Reset your password to regain access to your AmId account.</p>
         </div>
       </div>
 
       <div style={s.right}>
         <div style={s.formBox}>
           <img src={logo} alt="AmId" style={s.formLogo} />
-          <h2 style={s.title}>Welcome Back</h2>
-          <p style={s.subtitle}>Sign in to your AmId account</p>
+          <h2 style={s.title}>Reset Password</h2>
+          <p style={s.subtitle}>Enter your email and choose a new password</p>
 
           <label style={s.label}>Email Address</label>
-          <input style={s.input} name="email" placeholder="Enter your email"
+          <input style={s.input} name="email" placeholder="Enter your registered email"
             onChange={handleChange}
             onFocus={e => e.target.style.borderColor = "#C9A84C"}
             onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
 
-          <label style={s.label}>Password</label>
-          <input style={s.input} name="password" placeholder="Enter your password"
+          <label style={s.label}>New Password</label>
+          <input style={s.input} name="new_password" placeholder="Enter new password"
             type="password" onChange={handleChange}
             onFocus={e => e.target.style.borderColor = "#C9A84C"}
             onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
 
-          {message && <div style={s.errorMsg}>{message}</div>}
+          <label style={s.label}>Confirm New Password</label>
+          <input style={s.input} name="confirm" placeholder="Confirm new password"
+            type="password" onChange={handleChange}
+            onFocus={e => e.target.style.borderColor = "#C9A84C"}
+            onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
+
+          {message && (
+            <div style={success ? s.successMsg : s.errorMsg}>{message}</div>
+          )}
 
           <button style={s.btn} onClick={handleSubmit}
             onMouseEnter={e => { e.target.style.background = "#B8922E"; e.target.style.transform = "translateY(-1px)"; }}
             onMouseLeave={e => { e.target.style.background = "#C9A84C"; e.target.style.transform = "translateY(0)"; }}>
-            {loading ? "Signing In..." : "Sign In"}
+            {loading ? "Resetting..." : "Reset Password"}
           </button>
 
-          <div style={s.divider}><span style={s.dividerText}>or</span></div>
-
-          <p style={s.switchText}>
-            New to AmId?{" "}
-            <span style={s.link} onClick={() => navigate("/signup")}>Create Account</span>
-          </p>
-          <p style={{ ...s.switchText, marginTop: "10px" }}>
-            <span style={s.link} onClick={() => navigate("/reset-password")}>Forgot Password?</span>
+          <p style={{ ...s.switchText, marginTop: "20px" }}>
+            Remember your password?{" "}
+            <span style={s.link} onClick={() => navigate("/login")}>Sign In</span>
           </p>
         </div>
       </div>
@@ -91,9 +98,9 @@ const s = {
     flex: 1,
     background: "linear-gradient(135deg, #0D0D0D 0%, #1A1A1A 50%, #0D0D0D 100%)",
     display: "flex", alignItems: "center", justifyContent: "center",
-    padding: "60px 40px", position: "relative", overflow: "hidden"
+    padding: "60px 40px"
   },
-  leftOverlay: { textAlign: "center", zIndex: 1, position: "relative" },
+  leftOverlay: { textAlign: "center" },
   leftLogo: {
     width: "200px", height: "200px", objectFit: "contain", marginBottom: "24px",
     filter: "drop-shadow(0 8px 24px rgba(201,168,76,0.4))"
@@ -103,11 +110,8 @@ const s = {
     textTransform: "uppercase", margin: "0 0 16px", fontWeight: "300"
   },
   leftSub: {
-    fontSize: "15px", color: "#888", lineHeight: "1.8",
-    maxWidth: "300px", margin: "0 auto 28px"
+    fontSize: "15px", color: "#888", lineHeight: "1.8", maxWidth: "300px", margin: "0 auto"
   },
-  features: { marginTop: "8px" },
-  feature: { fontSize: "13px", color: "#C9A84C", letterSpacing: "1px", margin: "8px 0", opacity: 0.8 },
   right: {
     flex: 1, background: "#FAF8F4",
     display: "flex", alignItems: "center", justifyContent: "center", padding: "40px"
@@ -132,24 +136,21 @@ const s = {
     width: "100%", padding: "16px", background: "#C9A84C",
     color: "#0D0D0D", border: "none", borderRadius: "4px",
     fontSize: "13px", cursor: "pointer", letterSpacing: "2px",
-    textTransform: "uppercase", fontWeight: "700", marginTop: "4px",
+    textTransform: "uppercase", fontWeight: "700",
     transition: "all 0.2s", fontFamily: "'Arial', sans-serif"
+  },
+  successMsg: {
+    background: "#F0F9F0", border: "1px solid #4CAF50", color: "#2E7D32",
+    padding: "12px 16px", borderRadius: "4px", fontSize: "13px",
+    marginBottom: "16px", fontFamily: "'Arial', sans-serif"
   },
   errorMsg: {
     background: "#FFF3F3", border: "1px solid #E57373", color: "#C62828",
     padding: "12px 16px", borderRadius: "4px", fontSize: "13px",
     marginBottom: "16px", fontFamily: "'Arial', sans-serif"
   },
-  divider: {
-    textAlign: "center", margin: "20px 0", position: "relative", borderTop: "1px solid #DDD"
-  },
-  dividerText: {
-    background: "#FAF8F4", padding: "0 12px", color: "#AAA",
-    fontSize: "12px", position: "relative", top: "-10px",
-    fontFamily: "'Arial', sans-serif"
-  },
   switchText: { textAlign: "center", fontSize: "13px", color: "#888", fontFamily: "'Arial', sans-serif" },
   link: { color: "#C9A84C", cursor: "pointer", fontWeight: "600", borderBottom: "1px solid #C9A84C" }
 };
 
-export default Login;
+export default ResetPassword;
