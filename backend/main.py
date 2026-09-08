@@ -12,8 +12,9 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://amid-project-8ifkbux5k-husna-fathimaa-a-s-projects.vercel.app"
+        "http://192.168.31.107:3000",
     ],
+    allow_origin_regex=r"https://amid-project.*\.vercel\.app",
     allow_methods=["*"],
     allow_headers=["*"],
 )
