@@ -3,6 +3,26 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import logo from "./logo.jpg";
 
+const CATEGORIES = ["All", "Ethnic", "Party", "Wedding", "Casual", "Western"];
+
+// Dresses are named like "[Ethnic] Silk Saree" -- this pulls out the
+// category tag and the clean display name without touching the backend.
+function parseDress(dress) {
+  const match = dress.name.match(/^\[(.*?)\]\s*(.*)/);
+  if (match) {
+    return { ...dress, category: match[1], displayName: match[2] };
+  }
+  return { ...dress, category: "Western", displayName: dress.name };
+}
+
+// Cosmetic "original price" + discount badge for a Myntra-style look.
+// This is a display-only calculation, not a real backend discount.
+function withDiscount(dress) {
+  const originalPrice = Math.round(dress.price_per_day * 1.4 / 10) * 10;
+  const percentOff = Math.round(((originalPrice - dress.price_per_day) / originalPrice) * 100);
+  return { ...dress, originalPrice, percentOff };
+}
+
 function ClientDashboard() {
   const navigate = useNavigate();
   const name = localStorage.getItem("name");
@@ -11,6 +31,7 @@ function ClientDashboard() {
   const [dresses, setDresses] = useState([]);
   const [myBookings, setMyBookings] = useState([]);
   const [activeTab, setActiveTab] = useState("browse");
+  const [activeCategory, setActiveCategory] = useState("All");
   const [selectedDress, setSelectedDress] = useState(null);
   const [bookingForm, setBookingForm] = useState({
     rental_start: "", rental_end: "", delivery_address: ""
@@ -97,6 +118,11 @@ function ClientDashboard() {
 
   const logout = () => { localStorage.clear(); navigate("/login"); };
 
+  const parsedDresses = dresses.map(parseDress).map(withDiscount);
+  const filteredDresses = activeCategory === "All"
+    ? parsedDresses
+    : parsedDresses.filter(d => d.category === activeCategory);
+
   return (
     <div style={styles.container}>
       {/* Header */}
@@ -133,16 +159,49 @@ function ClientDashboard() {
         {/* Browse Tab */}
         {activeTab === "browse" && (
           <div>
-            <h3 style={styles.sectionTitle}>Available Dresses</h3>
-            {dresses.length === 0 && <p style={styles.empty}>No dresses available yet.</p>}
+            {/* Offers banner */}
+            <div style={styles.offerBanner}>
+              <div>
+                <p style={styles.offerTitle}>FESTIVE RENTAL SALE</p>
+                <p style={styles.offerSub}>Up to 40% off on select styles · Use code AMID20 for extra 20% off</p>
+              </div>
+              <span style={styles.offerBadge}>LIMITED TIME</span>
+            </div>
+
+            {/* Category chips */}
+            <div style={styles.categoryRow}>
+              {CATEGORIES.map(cat => (
+                <button
+                  key={cat}
+                  style={activeCategory === cat ? styles.categoryChipActive : styles.categoryChip}
+                  onClick={() => setActiveCategory(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            <h3 style={styles.sectionTitle}>
+              {activeCategory === "All" ? "Available Dresses" : `${activeCategory} Wear`}
+              <span style={styles.resultCount}> ({filteredDresses.length})</span>
+            </h3>
+
+            {filteredDresses.length === 0 && <p style={styles.empty}>No dresses available in this category yet.</p>}
             <div style={styles.grid}>
-              {dresses.map(dress => (
+              {filteredDresses.map(dress => (
                 <div key={dress.id} style={styles.dressCard}>
-                  <img src={dress.image_url} alt={dress.name} style={styles.dressImg} />
+                  <div style={styles.imgWrap}>
+                    <img src={dress.image_url} alt={dress.displayName} style={styles.dressImg} />
+                    <span style={styles.discountBadge}>{dress.percentOff}% OFF</span>
+                  </div>
                   <div style={styles.dressInfo}>
-                    <h4 style={styles.dressName}>{dress.name}</h4>
+                    <span style={styles.categoryTag}>{dress.category}</span>
+                    <h4 style={styles.dressName}>{dress.displayName}</h4>
                     <p style={styles.dressDesc}>{dress.description}</p>
-                    <p style={styles.dressPrice}>₹{dress.price_per_day}/day</p>
+                    <div style={styles.priceRow}>
+                      <span style={styles.dressPrice}>₹{dress.price_per_day}/day</span>
+                      <span style={styles.strikePrice}>₹{dress.originalPrice}</span>
+                    </div>
                     <p style={styles.dressDelivery}>Delivery in {dress.delivery_days} days</p>
                     <button
                       style={styles.bookBtn}
@@ -162,7 +221,7 @@ function ClientDashboard() {
         {/* Booking Form Tab */}
         {activeTab === "book" && selectedDress && (
           <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Book — {selectedDress.name}</h3>
+            <h3 style={styles.cardTitle}>Book — {selectedDress.displayName || selectedDress.name}</h3>
             <img src={selectedDress.image_url} alt={selectedDress.name} style={styles.preview} />
             <p style={styles.dressPrice}>₹{selectedDress.price_per_day}/day</p>
             <label style={styles.label}>Rental Start Date</label>
@@ -304,22 +363,64 @@ const styles = {
     letterSpacing: "0.5px", textTransform: "uppercase"
   },
   body: { padding: "32px" },
-  sectionTitle: { margin: "0 0 24px", fontSize: "20px", color: "#0D0D0D", fontFamily: "'Georgia', serif", fontWeight: "600" },
+
+  offerBanner: {
+    background: "linear-gradient(135deg, #0D0D0D 0%, #2A2210 100%)",
+    borderRadius: "8px", padding: "24px 28px", marginBottom: "28px",
+    display: "flex", justifyContent: "space-between", alignItems: "center",
+    border: "1px solid #C9A84C"
+  },
+  offerTitle: { margin: "0 0 6px", color: "#C9A84C", fontSize: "20px", fontFamily: "'Georgia', serif", letterSpacing: "1px", fontWeight: "700" },
+  offerSub: { margin: 0, color: "#DDD", fontSize: "13px" },
+  offerBadge: {
+    background: "#C9A84C", color: "#0D0D0D", padding: "6px 14px", borderRadius: "20px",
+    fontSize: "11px", fontWeight: "700", letterSpacing: "1px", whiteSpace: "nowrap"
+  },
+
+  categoryRow: { display: "flex", gap: "10px", marginBottom: "28px", flexWrap: "wrap" },
+  categoryChip: {
+    padding: "9px 20px", borderRadius: "20px", border: "1px solid #DDD",
+    background: "#FFFFFF", color: "#555", fontSize: "13px", cursor: "pointer",
+    fontWeight: "600", transition: "all 0.2s"
+  },
+  categoryChipActive: {
+    padding: "9px 20px", borderRadius: "20px", border: "1px solid #0D0D0D",
+    background: "#0D0D0D", color: "#C9A84C", fontSize: "13px", cursor: "pointer",
+    fontWeight: "700", transition: "all 0.2s"
+  },
+
+  sectionTitle: { margin: "0 0 20px", fontSize: "20px", color: "#0D0D0D", fontFamily: "'Georgia', serif", fontWeight: "600" },
+  resultCount: { color: "#AAA", fontSize: "15px", fontFamily: "'Arial', sans-serif", fontWeight: "400" },
+
   card: { background: "#FFFFFF", padding: "36px", borderRadius: "6px", maxWidth: "500px", border: "1px solid #EDE7DA" },
   cardTitle: { margin: "0 0 20px", fontSize: "20px", color: "#0D0D0D", fontFamily: "'Georgia', serif", fontWeight: "600" },
+
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "20px" },
-  dressCard: { background: "#FFFFFF", borderRadius: "6px", overflow: "hidden", border: "1px solid #EDE7DA" },
-  dressImg: { width: "100%", height: "200px", objectFit: "cover" },
+  dressCard: {
+    background: "#FFFFFF", borderRadius: "6px", overflow: "hidden", border: "1px solid #EDE7DA",
+    transition: "box-shadow 0.2s"
+  },
+  imgWrap: { position: "relative" },
+  dressImg: { width: "100%", height: "260px", objectFit: "cover" },
+  discountBadge: {
+    position: "absolute", top: "10px", left: "10px", background: "#0D0D0D",
+    color: "#C9A84C", fontSize: "11px", fontWeight: "700", padding: "4px 10px",
+    borderRadius: "3px", letterSpacing: "0.5px"
+  },
   dressInfo: { padding: "16px" },
-  dressName: { margin: "0 0 8px", fontSize: "15px", color: "#0D0D0D", fontFamily: "'Georgia', serif" },
+  categoryTag: { fontSize: "11px", color: "#C9A84C", fontWeight: "700", letterSpacing: "1px", textTransform: "uppercase" },
+  dressName: { margin: "4px 0 8px", fontSize: "15px", color: "#0D0D0D", fontFamily: "'Georgia', serif" },
   dressDesc: { margin: "0 0 10px", color: "#888", fontSize: "13px", lineHeight: "1.4" },
-  dressPrice: { margin: "0 0 6px", color: "#C9A84C", fontWeight: "700" },
+  priceRow: { display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "6px" },
+  dressPrice: { color: "#0D0D0D", fontWeight: "700", fontSize: "15px" },
+  strikePrice: { color: "#AAA", fontSize: "13px", textDecoration: "line-through" },
   dressDelivery: { margin: "0 0 14px", color: "#888", fontSize: "13px" },
   bookBtn: {
     width: "100%", padding: "11px", background: "#C9A84C", color: "#0D0D0D",
     border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "700",
     fontSize: "12px", letterSpacing: "1.5px", textTransform: "uppercase", transition: "background 0.2s"
   },
+
   preview: { width: "100%", height: "200px", objectFit: "cover", borderRadius: "4px", marginBottom: "18px", border: "1px solid #EDE7DA" },
   label: {
     display: "block", fontSize: "12px", color: "#555", marginBottom: "6px",
