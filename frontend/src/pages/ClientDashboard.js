@@ -449,7 +449,7 @@ function ClientDashboard() {
 
     try {
       const res = await axios.post(
-        "https://amid-project.onrender.com/ai/recommend",
+        "http://127.0.0.1:8000/ai/recommend",
         {
           occasion: aiQuestion.occasion,
           budget: parseFloat(aiQuestion.budget),
