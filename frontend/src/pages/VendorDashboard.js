@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import logo from "./logo.jpg";
 
+const API = "https://amid-project.onrender.com";
+
 function VendorDashboard() {
   const navigate = useNavigate();
   const name = localStorage.getItem("name");
@@ -25,25 +27,23 @@ function VendorDashboard() {
 
   const fetchMyDresses = async () => {
     try {
-      const res = await axios.get(`https://amid-project.onrender.com/dresses/vendor/${vendor_id}`);
+      const res = await axios.get(`${API}/dresses/vendor/${vendor_id}`);
       setMyDresses(res.data);
     } catch (err) { console.log(err); }
   };
 
   const fetchBookings = async () => {
     try {
-      const res = await axios.get(`https://amid-project.onrender.com/bookings/vendor/${vendor_id}`);
+      const res = await axios.get(`${API}/bookings/vendor/${vendor_id}`);
       setBookings(res.data);
     } catch (err) { console.log(err); }
   };
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleUpload = async () => {
     try {
-      await axios.post("https://amid-project.onrender.com/dresses/upload", {
+      await axios.post(`${API}/dresses/upload`, {
         ...form,
         price_per_day: parseFloat(form.price_per_day),
         delivery_days: parseInt(form.delivery_days),
@@ -57,9 +57,21 @@ function VendorDashboard() {
     }
   };
 
+  const handleDelete = async (dress_id, dress_name) => {
+    if (window.confirm(`Delete "${dress_name}"? This cannot be undone.`)) {
+      try {
+        await axios.delete(`${API}/dresses/${dress_id}`);
+        setMessage("Dress deleted successfully.");
+        fetchMyDresses();
+      } catch (err) {
+        setMessage("Cannot delete — dress may have active bookings.");
+      }
+    }
+  };
+
   const handleApproval = async (booking_id, status) => {
     try {
-      await axios.put(`https://amid-project.onrender.com/bookings/update/${booking_id}?status=${status}`);
+      await axios.put(`${API}/bookings/update/${booking_id}?status=${status}`);
       fetchBookings();
     } catch (err) { console.log(err); }
   };
@@ -67,102 +79,100 @@ function VendorDashboard() {
   const logout = () => { localStorage.clear(); navigate("/login"); };
 
   return (
-    <div style={styles.container}>
+    <div style={s.container}>
       {/* Header */}
-      <div style={styles.header}>
-        <div style={styles.logoRow}>
-          <img src={logo} alt="AmId" style={styles.headerLogo} />
-          <h2 style={styles.logo}>AmId</h2>
+      <div style={s.header}>
+        <div style={s.logoRow}>
+          <img src={logo} alt="AmId" style={s.headerLogo} />
+          <h2 style={s.logo}>AmId</h2>
         </div>
-        <div style={styles.headerRight}>
-          <span style={styles.welcome}>Welcome, {name}</span>
-          <button
-            style={styles.logoutBtn}
-            onClick={logout}
+        <div style={s.headerRight}>
+          <span style={s.welcome}>Welcome, {name}</span>
+          <button style={s.logoutBtn} onClick={logout}
             onMouseEnter={e => { e.target.style.background = "#C9A84C"; e.target.style.color = "#0D0D0D"; }}
-            onMouseLeave={e => { e.target.style.background = "transparent"; e.target.style.color = "#C9A84C"; }}
-          >
+            onMouseLeave={e => { e.target.style.background = "transparent"; e.target.style.color = "#C9A84C"; }}>
             Logout
           </button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div style={styles.tabBar}>
-        <button style={activeTab === "upload" ? styles.tabActive : styles.tab}
+      <div style={s.tabBar}>
+        <button style={activeTab === "upload" ? s.tabActive : s.tab}
           onClick={() => setActiveTab("upload")}>Upload Dress</button>
-        <button style={activeTab === "mydresses" ? styles.tabActive : styles.tab}
+        <button style={activeTab === "mydresses" ? s.tabActive : s.tab}
           onClick={() => setActiveTab("mydresses")}>My Dresses ({myDresses.length})</button>
-        <button style={activeTab === "bookings" ? styles.tabActive : styles.tab}
+        <button style={activeTab === "bookings" ? s.tabActive : s.tab}
           onClick={() => setActiveTab("bookings")}>Bookings ({bookings.length})</button>
       </div>
 
-      <div style={styles.body}>
+      <div style={s.body}>
 
         {/* Upload Tab */}
         {activeTab === "upload" && (
-          <div style={styles.card}>
-            <h3 style={styles.cardTitle}>Upload a New Dress</h3>
-
-            <label style={styles.label}>Image URL</label>
-            <input style={styles.input} name="image_url" placeholder="Paste image URL here"
+          <div style={s.card}>
+            <h3 style={s.cardTitle}>Upload a New Dress</h3>
+            <label style={s.label}>Image URL</label>
+            <input style={s.input} name="image_url" placeholder="Paste image URL here"
               value={form.image_url} onChange={handleChange}
               onFocus={e => e.target.style.borderColor = "#C9A84C"}
               onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
-
-            <label style={styles.label}>Price per Day (₹)</label>
-            <input style={styles.input} name="price_per_day" placeholder="e.g. 999"
+            <label style={s.label}>Price per Day (₹)</label>
+            <input style={s.input} name="price_per_day" placeholder="e.g. 999"
               type="number" value={form.price_per_day} onChange={handleChange}
               onFocus={e => e.target.style.borderColor = "#C9A84C"}
               onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
-
-            <label style={styles.label}>Delivery Days</label>
-            <input style={styles.input} name="delivery_days" placeholder="e.g. 2"
+            <label style={s.label}>Delivery Days</label>
+            <input style={s.input} name="delivery_days" placeholder="e.g. 2"
               type="number" value={form.delivery_days} onChange={handleChange}
               onFocus={e => e.target.style.borderColor = "#C9A84C"}
               onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
-
-            <label style={styles.label}>Dress Name</label>
-            <input style={styles.input} name="name" placeholder="Dress Name"
+            <label style={s.label}>Dress Name</label>
+            <input style={s.input} name="name" placeholder="Dress Name"
               value={form.name} onChange={handleChange}
               onFocus={e => e.target.style.borderColor = "#C9A84C"}
               onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
-
-            <label style={styles.label}>Description</label>
-            <textarea style={styles.textarea} name="description" placeholder="Description"
+            <label style={s.label}>Description</label>
+            <textarea style={s.textarea} name="description" placeholder="Description"
               value={form.description} onChange={handleChange}
               onFocus={e => e.target.style.borderColor = "#C9A84C"}
               onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
-
             {form.image_url && (
-              <img src={form.image_url} alt="preview" style={styles.preview} />
+              <img src={form.image_url} alt="preview" style={s.preview} />
             )}
-
-            <button
-              style={styles.button}
-              onClick={handleUpload}
+            <button style={s.button} onClick={handleUpload}
               onMouseEnter={e => { e.target.style.background = "#B8922E"; e.target.style.transform = "translateY(-1px)"; }}
-              onMouseLeave={e => { e.target.style.background = "#C9A84C"; e.target.style.transform = "translateY(0)"; }}
-            >
+              onMouseLeave={e => { e.target.style.background = "#C9A84C"; e.target.style.transform = "translateY(0)"; }}>
               Upload Dress
             </button>
-            {message && <p style={styles.message}>{message}</p>}
+            {message && <p style={s.message}>{message}</p>}
           </div>
         )}
 
         {/* My Dresses Tab */}
         {activeTab === "mydresses" && (
           <div>
-            <h3 style={styles.cardTitle}>My Listed Dresses</h3>
-            {myDresses.length === 0 && <p style={styles.empty}>No dresses uploaded yet.</p>}
-            <div style={styles.grid}>
+            <h3 style={s.cardTitle}>My Listed Dresses</h3>
+            {myDresses.length === 0 && <p style={s.empty}>No dresses uploaded yet.</p>}
+            <div style={s.grid}>
               {myDresses.map(dress => (
-                <div key={dress.id} style={styles.dressCard}>
-                  <img src={dress.image_url} alt={dress.name} style={styles.dressImg} />
-                  <div style={styles.dressInfo}>
-                    <h4 style={styles.dressName}>{dress.name}</h4>
-                    <p style={styles.dressPrice}>₹{dress.price_per_day}/day</p>
-                    <p style={styles.dressDelivery}>Delivery in {dress.delivery_days} days</p>
+                <div key={dress.id} style={s.dressCard}>
+                  <div style={s.imgWrap}>
+                    <img src={dress.image_url} alt={dress.name} style={s.dressImg} />
+                  </div>
+                  <div style={s.dressInfo}>
+                    <h4 style={s.dressName}>{dress.name}</h4>
+                    <p style={s.dressPrice}>₹{dress.price_per_day}/day</p>
+                    <p style={s.dressDelivery}>🚚 Delivery in {dress.delivery_days} days</p>
+                    <div style={s.cardActions}>
+                      <span style={s.availableBadge}>Available</span>
+                      <button style={s.deleteBtn}
+                        onClick={() => handleDelete(dress.id, dress.name)}
+                        onMouseEnter={e => { e.target.style.background = "#c62828"; e.target.style.color = "#fff"; }}
+                        onMouseLeave={e => { e.target.style.background = "transparent"; e.target.style.color = "#EF5350"; }}>
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -173,37 +183,35 @@ function VendorDashboard() {
         {/* Bookings Tab */}
         {activeTab === "bookings" && (
           <div>
-            <h3 style={styles.cardTitle}>Incoming Booking Requests</h3>
-            {bookings.length === 0 && <p style={styles.empty}>No bookings yet.</p>}
+            <h3 style={s.cardTitle}>Incoming Booking Requests</h3>
+            {bookings.length === 0 && <p style={s.empty}>No bookings yet.</p>}
             {bookings.map(booking => (
-              <div key={booking.booking_id} style={styles.bookingCard}>
-                <div style={styles.bookingTop}>
+              <div key={booking.booking_id} style={s.bookingCard}>
+                <div style={s.bookingTop}>
                   <div>
-                    <h4 style={styles.bookingDress}>{booking.dress_name}</h4>
-                    <p style={styles.bookingClient}>{booking.client_name} — {booking.client_email}</p>
-                    <p style={styles.bookingDates}>{booking.rental_start} to {booking.rental_end}</p>
-                    <p style={styles.bookingAddress}>{booking.delivery_address}</p>
-                    <p style={styles.bookingPrice}>₹{booking.total_price}</p>
+                    <h4 style={s.bookingDress}>{booking.dress_name}</h4>
+                    <p style={s.bookingClient}>👤 {booking.client_name} — {booking.client_email}</p>
+                    <p style={s.bookingDates}>📅 {booking.rental_start} to {booking.rental_end}</p>
+                    <p style={s.bookingAddress}>📍 {booking.delivery_address}</p>
+                    <p style={s.bookingPrice}>💰 ₹{booking.total_price}</p>
                   </div>
-                  <div>
-                    <span style={{
-                      ...styles.statusBadge,
-                      background: booking.status === "approved" ? "rgba(46,125,50,0.15)" :
-                        booking.status === "rejected" ? "rgba(198,40,40,0.15)" : "rgba(201,168,76,0.15)",
-                      color: booking.status === "approved" ? "#4CAF50" :
-                        booking.status === "rejected" ? "#EF5350" : "#C9A84C"
-                    }}>{booking.status.toUpperCase()}</span>
-                  </div>
+                  <span style={{
+                    ...s.statusBadge,
+                    background: booking.status === "approved" ? "rgba(46,125,50,0.15)" :
+                      booking.status === "rejected" ? "rgba(198,40,40,0.15)" : "rgba(201,168,76,0.15)",
+                    color: booking.status === "approved" ? "#4CAF50" :
+                      booking.status === "rejected" ? "#EF5350" : "#C9A84C"
+                  }}>{booking.status.toUpperCase()}</span>
                 </div>
                 {booking.status === "pending" && (
-                  <div style={styles.actionRow}>
-                    <button style={styles.approveBtn}
+                  <div style={s.actionRow}>
+                    <button style={s.approveBtn}
                       onClick={() => handleApproval(booking.booking_id, "approved")}>
-                      Approve
+                      ✓ Approve
                     </button>
-                    <button style={styles.rejectBtn}
+                    <button style={s.rejectBtn}
                       onClick={() => handleApproval(booking.booking_id, "rejected")}>
-                      Reject
+                      ✕ Reject
                     </button>
                   </div>
                 )}
@@ -216,7 +224,7 @@ function VendorDashboard() {
   );
 }
 
-const styles = {
+const s = {
   container: { minHeight: "100vh", background: "#FAF8F4", fontFamily: "'Arial', sans-serif" },
   header: {
     background: "#0D0D0D", padding: "16px 32px", display: "flex",
@@ -272,11 +280,23 @@ const styles = {
   message: { textAlign: "center", marginTop: "14px", color: "#C9A84C", fontSize: "13px" },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "20px" },
   dressCard: { background: "#FFFFFF", borderRadius: "6px", overflow: "hidden", border: "1px solid #EDE7DA" },
-  dressImg: { width: "100%", height: "180px", objectFit: "cover" },
+  imgWrap: { position: "relative" },
+  dressImg: { width: "100%", height: "200px", objectFit: "cover" },
   dressInfo: { padding: "16px" },
-  dressName: { margin: "0 0 8px", fontSize: "15px", color: "#0D0D0D", fontFamily: "'Georgia', serif" },
-  dressPrice: { margin: "0 0 6px", color: "#C9A84C", fontWeight: "700" },
-  dressDelivery: { margin: 0, color: "#888", fontSize: "13px" },
+  dressName: { margin: "0 0 8px", fontSize: "14px", color: "#0D0D0D", fontFamily: "'Georgia', serif" },
+  dressPrice: { margin: "0 0 4px", color: "#C9A84C", fontWeight: "700" },
+  dressDelivery: { margin: "0 0 12px", color: "#888", fontSize: "13px" },
+  cardActions: { display: "flex", justifyContent: "space-between", alignItems: "center" },
+  availableBadge: {
+    fontSize: "11px", color: "#4CAF50", background: "rgba(76,175,80,0.1)",
+    padding: "3px 10px", borderRadius: "20px", fontWeight: "700"
+  },
+  deleteBtn: {
+    padding: "6px 14px", background: "transparent", color: "#EF5350",
+    border: "1px solid #EF5350", borderRadius: "4px", cursor: "pointer",
+    fontWeight: "700", fontSize: "11px", letterSpacing: "0.5px",
+    textTransform: "uppercase", transition: "all 0.2s"
+  },
   bookingCard: { background: "#FFFFFF", borderRadius: "6px", padding: "22px", marginBottom: "14px", border: "1px solid #EDE7DA" },
   bookingTop: { display: "flex", justifyContent: "space-between", alignItems: "flex-start" },
   bookingDress: { margin: "0 0 8px", fontSize: "16px", color: "#0D0D0D", fontFamily: "'Georgia', serif" },
@@ -284,7 +304,7 @@ const styles = {
   bookingDates: { margin: "0 0 4px", color: "#555", fontSize: "13px" },
   bookingAddress: { margin: "0 0 4px", color: "#555", fontSize: "13px" },
   bookingPrice: { margin: 0, color: "#C9A84C", fontWeight: "700", fontSize: "13px" },
-  statusBadge: { padding: "5px 14px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", letterSpacing: "0.5px" },
+  statusBadge: { padding: "5px 14px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", letterSpacing: "0.5px", whiteSpace: "nowrap" },
   actionRow: { display: "flex", gap: "10px", marginTop: "16px" },
   approveBtn: {
     padding: "9px 22px", background: "transparent", color: "#4CAF50",
