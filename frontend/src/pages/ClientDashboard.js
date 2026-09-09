@@ -3,12 +3,12 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import logo from "./logo.jpg";
 
-const CATEGORY_TILES = [
-  { name: "Ethnic", image: "https://placehold.co/400x500/0D0D0D/C9A84C?text=Ethnic&font=playfair-display" },
-  { name: "Party", image: "https://placehold.co/400x500/0D0D0D/C9A84C?text=Party&font=playfair-display" },
-  { name: "Wedding", image: "https://placehold.co/400x500/0D0D0D/C9A84C?text=Wedding&font=playfair-display" },
-  { name: "Casual", image: "https://placehold.co/400x500/0D0D0D/C9A84C?text=Casual&font=playfair-display" },
-  { name: "Western", image: "https://placehold.co/400x500/0D0D0D/C9A84C?text=Western&font=playfair-display" },
+const CATEGORY_META = [
+  { name: "Ethnic", from: "#5C1A1A", to: "#2B0D0D" },
+  { name: "Party", from: "#1A1A5C", to: "#0D0D2B" },
+  { name: "Wedding", from: "#7A1F3D", to: "#3D0F1F" },
+  { name: "Casual", from: "#1F4D3D", to: "#0F261F" },
+  { name: "Western", from: "#4D3D1F", to: "#261F0F" },
 ];
 
 const PRICE_RANGES = [
@@ -150,6 +150,13 @@ function ClientDashboard() {
     .filter(d => d.category === activeCategory)
     .filter(d => d.price_per_day >= activePriceRange.min && d.price_per_day <= activePriceRange.max);
 
+  // Pick one real dress photo per category (from what the vendor already uploaded)
+  // to use as the tile background -- falls back to a plain color if none exist yet.
+  const categoryTiles = CATEGORY_META.map(cat => {
+    const match = parsedDresses.find(d => d.category === cat.name);
+    return { ...cat, image: match ? match.image_url : null };
+  });
+
   return (
     <div style={styles.container}>
       {/* Header */}
@@ -202,18 +209,50 @@ function ClientDashboard() {
 
             <h3 style={styles.sectionTitle}>Shop by Category</h3>
             <div style={styles.tileGrid}>
-              {CATEGORY_TILES.map(tile => (
+              {categoryTiles.map(tile => (
                 <div
                   key={tile.name}
-                  style={styles.tile}
+                  style={{
+                    ...styles.tile,
+                    background: `linear-gradient(180deg, rgba(0,0,0,0.15) 0%, ${tile.to} 85%), linear-gradient(135deg, ${tile.from}, ${tile.to})`
+                  }}
                   onClick={() => openCategory(tile.name)}
-                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-6px)"; e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.15)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-6px)"; e.currentTarget.style.boxShadow = "0 14px 28px rgba(0,0,0,0.35)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 10px rgba(0,0,0,0.15)"; }}
                 >
-                  <img src={tile.image} alt={tile.name} style={styles.tileImg} />
-                  <p style={styles.tileLabel}>{tile.name}</p>
+                  {tile.image && (
+                    <img src={tile.image} alt={tile.name} style={styles.tileImg} />
+                  )}
+                  <div style={styles.tileOverlay}>
+                    <p style={styles.tileLabel}>{tile.name}</p>
+                    <p style={styles.tileSub}>Shop Now →</p>
+                  </div>
                 </div>
               ))}
+
+              {/* Promo tile 1 */}
+              <div
+                style={styles.promoTile}
+                onClick={() => setActiveTab("ai")}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-6px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
+              >
+                <p style={styles.promoIcon}>✦</p>
+                <p style={styles.promoTitle}>AI STYLIST</p>
+                <p style={styles.promoSub}>Get personalized dress picks in seconds</p>
+              </div>
+
+              {/* Promo tile 2 */}
+              <div
+                style={styles.promoTile}
+                onClick={() => setActiveTab("mybookings")}
+                onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-6px)"; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
+              >
+                <p style={styles.promoIcon}>⌚</p>
+                <p style={styles.promoTitle}>TRACK BOOKINGS</p>
+                <p style={styles.promoSub}>See status on all your current rentals</p>
+              </div>
             </div>
           </div>
         )}
@@ -436,10 +475,32 @@ const styles = {
     fontSize: "11px", fontWeight: "700", letterSpacing: "1px", whiteSpace: "nowrap"
   },
 
-  tileGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "18px" },
-  tile: { cursor: "pointer", borderRadius: "6px", overflow: "hidden", border: "1px solid #EDE7DA", background: "#FFFFFF", transition: "transform 0.2s, box-shadow 0.2s" },
-  tileImg: { width: "100%", height: "200px", objectFit: "cover" },
-  tileLabel: { textAlign: "center", padding: "12px", margin: 0, color: "#0D0D0D", fontFamily: "'Georgia', serif", fontWeight: "600", fontSize: "15px" },
+  tileGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "18px" },
+  tile: {
+    cursor: "pointer", borderRadius: "10px", overflow: "hidden", position: "relative",
+    height: "260px", transition: "transform 0.25s, box-shadow 0.25s",
+    boxShadow: "0 4px 10px rgba(0,0,0,0.15)"
+  },
+  tileImg: {
+    position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
+    objectFit: "cover", opacity: 0.55
+  },
+  tileOverlay: {
+    position: "absolute", bottom: 0, left: 0, right: 0, padding: "18px",
+    background: "linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.75) 100%)"
+  },
+  tileLabel: { margin: "0 0 4px", color: "#F5E6B8", fontFamily: "'Georgia', serif", fontWeight: "700", fontSize: "22px", letterSpacing: "1px" },
+  tileSub: { margin: 0, color: "#C9A84C", fontSize: "12px", fontWeight: "600", letterSpacing: "0.5px" },
+
+  promoTile: {
+    cursor: "pointer", borderRadius: "10px", height: "260px", display: "flex",
+    flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center",
+    background: "#FFFFFF", border: "1px solid #EDE7DA", padding: "20px",
+    transition: "transform 0.25s"
+  },
+  promoIcon: { fontSize: "32px", color: "#C9A84C", margin: "0 0 12px" },
+  promoTitle: { fontSize: "16px", fontFamily: "'Georgia', serif", fontWeight: "700", color: "#0D0D0D", margin: "0 0 8px", letterSpacing: "1px" },
+  promoSub: { fontSize: "12px", color: "#888", margin: 0, lineHeight: "1.5" },
 
   categoryRow: { display: "flex", gap: "10px", marginBottom: "24px", flexWrap: "wrap" },
   categoryChip: {
@@ -508,8 +569,7 @@ const styles = {
   button: {
     width: "100%", padding: "16px", background: "#C9A84C", color: "#0D0D0D",
     border: "none", borderRadius: "4px", fontSize: "13px", cursor: "pointer",
-    letterSpacing: "2px", textTransform: "uppercase", fontWeight: "700",
-    marginBottom: "8px", transition: "all 0.2s"
+    letterSpacing: "2px", textTransform: "uppercase", fontWeight: "700", transition: "all 0.2s"
   },
   backBtn: {
     padding: "10px 20px", background: "transparent", color: "#0D0D0D",
