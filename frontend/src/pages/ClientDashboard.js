@@ -19,8 +19,6 @@ const PRICE_RANGES = [
   { label: "Above ₹1500", min: 1500, max: Infinity },
 ];
 
-// Dresses are named like "[Ethnic] Silk Saree" -- this pulls out the
-// category tag and the clean display name without touching the backend.
 function parseDress(dress) {
   const match = dress.name.match(/^\[(.*?)\]\s*(.*)/);
   if (match) {
@@ -29,12 +27,17 @@ function parseDress(dress) {
   return { ...dress, category: "Western", displayName: dress.name };
 }
 
-// Cosmetic "original price" + discount badge for a Myntra-style look.
-// This is a display-only calculation, not a real backend discount.
 function withDiscount(dress) {
   const originalPrice = Math.round(dress.price_per_day * 1.4 / 10) * 10;
   const percentOff = Math.round(((originalPrice - dress.price_per_day) / originalPrice) * 100);
   return { ...dress, originalPrice, percentOff };
+}
+
+// Turns "2026-09-15" into "15 Sep 2026" for friendlier reading.
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
 function ClientDashboard() {
@@ -45,7 +48,7 @@ function ClientDashboard() {
   const [dresses, setDresses] = useState([]);
   const [myBookings, setMyBookings] = useState([]);
   const [activeTab, setActiveTab] = useState("browse");
-  const [browseView, setBrowseView] = useState("home"); // "home" or "category"
+  const [browseView, setBrowseView] = useState("home");
   const [activeCategory, setActiveCategory] = useState(null);
   const [activePriceRange, setActivePriceRange] = useState(PRICE_RANGES[0]);
   const [selectedDress, setSelectedDress] = useState(null);
@@ -159,8 +162,6 @@ function ClientDashboard() {
     .filter(d => d.category === activeCategory)
     .filter(d => d.price_per_day >= activePriceRange.min && d.price_per_day <= activePriceRange.max);
 
-  // Pick one real dress photo per category (from what the vendor already uploaded)
-  // to use as the tile background -- falls back to a plain color if none exist yet.
   const categoryTiles = CATEGORY_META.map(cat => {
     const match = parsedDresses.find(d => d.category === cat.name);
     return { ...cat, image: match ? match.image_url : null };
@@ -239,7 +240,6 @@ function ClientDashboard() {
                 </div>
               ))}
 
-              {/* Promo tile 1 */}
               <div
                 style={styles.promoTile}
                 onClick={() => setActiveTab("ai")}
@@ -251,7 +251,6 @@ function ClientDashboard() {
                 <p style={styles.promoSub}>Get personalized dress picks in seconds</p>
               </div>
 
-              {/* Promo tile 2 */}
               <div
                 style={styles.promoTile}
                 onClick={() => setActiveTab("mybookings")}
@@ -407,6 +406,21 @@ function ClientDashboard() {
                       booking.status === "rejected" ? "#EF5350" : "#C9A84C"
                   }}>{booking.status.toUpperCase()}</span>
                 </div>
+
+                {booking.status === "approved" && (
+                  <div style={styles.successPanel}>
+                    <p style={styles.successTitle}>Booking Confirmed!</p>
+                    <p style={styles.successRow}>
+                      <span style={styles.successLabel}>Delivery Date:</span> {formatDate(booking.rental_start)}
+                    </p>
+                    <p style={styles.successRow}>
+                      <span style={styles.successLabel}>Return Pickup Date:</span> {formatDate(booking.rental_end)}
+                    </p>
+                    <p style={styles.successNote}>
+                      Our delivery partner will drop off your dress on the delivery date, and collect it for return on the pickup date. Please have it ready.
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -628,6 +642,16 @@ const styles = {
   bookingDress: { margin: "0 0 6px", fontSize: "15px", color: "#0D0D0D", fontFamily: "'Georgia', serif" },
   bookingMeta: { margin: "0 0 3px", fontSize: "13px", color: "#888" },
   statusBadge: { padding: "6px 14px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", letterSpacing: "0.5px", whiteSpace: "nowrap" },
+
+  successPanel: {
+    marginTop: "14px", background: "rgba(76,175,80,0.06)", border: "1px solid #4CAF50",
+    borderRadius: "6px", padding: "16px"
+  },
+  successTitle: { margin: "0 0 10px", color: "#2E7D32", fontFamily: "'Georgia', serif", fontWeight: "700", fontSize: "15px" },
+  successRow: { margin: "0 0 6px", fontSize: "13px", color: "#333" },
+  successLabel: { fontWeight: "700", color: "#0D0D0D" },
+  successNote: { margin: "10px 0 0", fontSize: "12px", color: "#555", lineHeight: "1.6" },
+
   empty: { color: "#AAA", textAlign: "center", padding: "60px", fontSize: "14px" },
   aiIntro: { color: "#888", fontSize: "13px", marginBottom: "24px", lineHeight: "1.6" },
   aiResult: {
