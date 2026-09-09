@@ -71,3 +71,21 @@ def delete_all_vendor_dresses(vendor_id: int, db: Session = Depends(get_db)):
             db.rollback()
             skipped += 1
     return {"message": f"Deleted {deleted} dresses, skipped {skipped} (still linked to a booking) for vendor {vendor_id}"}
+@router.get("/{dress_id}/booked-dates")
+def get_booked_dates(dress_id: int, db: Session = Depends(get_db)):
+    from models import Booking
+    bookings = db.query(Booking).filter(
+        Booking.dress_id == dress_id,
+        Booking.status != "rejected"
+    ).all()
+    booked = []
+    for b in bookings:
+        if b.rental_start and b.rental_end:
+            from datetime import date, timedelta
+            start = b.rental_start
+            end = b.rental_end
+            current = start
+            while current <= end:
+                booked.append(str(current))
+                current += timedelta(days=1)
+    return {"booked_dates": booked}

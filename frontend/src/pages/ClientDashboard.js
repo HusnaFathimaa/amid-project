@@ -52,6 +52,7 @@ function ClientDashboard() {
   const [bookingForm, setBookingForm] = useState({
     rental_start: "", rental_end: "", delivery_address: ""
   });
+  const [bookedDates, setBookedDates] = useState([]);
   const [message, setMessage] = useState("");
   const [aiQuestion, setAiQuestion] = useState({ occasion: "", budget: "", style: "" });
   const [aiRecommendation, setAiRecommendation] = useState("");
@@ -77,6 +78,13 @@ function ClientDashboard() {
     } catch (err) { console.log(err); }
   };
 
+  const fetchBookedDates = async (dress_id) => {
+    try {
+      const res = await axios.get(`https://amid-project.onrender.com/dresses/${dress_id}/booked-dates`);
+      setBookedDates(res.data.booked_dates);
+    } catch (err) { console.log(err); }
+  };
+
   const openCategory = (categoryName) => {
     setActiveCategory(categoryName);
     setActivePriceRange(PRICE_RANGES[0]);
@@ -90,6 +98,7 @@ function ClientDashboard() {
 
   const handleBook = async (dress) => {
     setSelectedDress(dress);
+    await fetchBookedDates(dress.id);
     setActiveTab("book");
   };
 
@@ -318,15 +327,40 @@ function ClientDashboard() {
             <img src={selectedDress.image_url} alt={selectedDress.name} style={styles.preview} />
             <p style={styles.dressPrice}>₹{selectedDress.price_per_day}/day</p>
             <label style={styles.label}>Rental Start Date</label>
-            <input style={styles.input} type="date" value={bookingForm.rental_start}
-              onChange={e => setBookingForm({ ...bookingForm, rental_start: e.target.value })}
+            <input style={styles.input} type="date"
+              min={new Date().toISOString().split("T")[0]}
+              value={bookingForm.rental_start}
+              onChange={e => {
+                const selected = e.target.value;
+                if (bookedDates.includes(selected)) {
+                  setMessage("This date is already booked. Please choose another date.");
+                  return;
+                }
+                setMessage("");
+                setBookingForm({ ...bookingForm, rental_start: selected });
+              }}
               onFocus={e => e.target.style.borderColor = "#C9A84C"}
               onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
             <label style={styles.label}>Rental End Date</label>
-            <input style={styles.input} type="date" value={bookingForm.rental_end}
-              onChange={e => setBookingForm({ ...bookingForm, rental_end: e.target.value })}
+            <input style={styles.input} type="date"
+              min={bookingForm.rental_start || new Date().toISOString().split("T")[0]}
+              value={bookingForm.rental_end}
+              onChange={e => {
+                const selected = e.target.value;
+                if (bookedDates.includes(selected)) {
+                  setMessage("This date is already booked. Please choose another date.");
+                  return;
+                }
+                setMessage("");
+                setBookingForm({ ...bookingForm, rental_end: selected });
+              }}
               onFocus={e => e.target.style.borderColor = "#C9A84C"}
               onBlur={e => e.target.style.borderColor = "#2A2A2A"} />
+            {bookedDates.length > 0 && (
+              <div style={styles.bookedHint}>
+                Some dates are already booked for this dress. Booked dates will be rejected.
+              </div>
+            )}
             <label style={styles.label}>Delivery Address</label>
             <textarea style={styles.textarea} placeholder="Enter your full delivery address"
               value={bookingForm.delivery_address}
@@ -582,6 +616,11 @@ const styles = {
     cursor: "pointer", letterSpacing: "1px", textTransform: "uppercase", fontWeight: "600"
   },
   message: { textAlign: "center", color: "#C9A84C", marginBottom: "12px", fontSize: "13px" },
+  bookedHint: {
+    background: "rgba(239,83,80,0.08)", border: "1px solid #EF5350",
+    borderRadius: "4px", padding: "10px 14px", marginBottom: "16px",
+    color: "#EF5350", fontSize: "12px"
+  },
   bookingCard: { background: "#FFFFFF", borderRadius: "6px", padding: "18px", marginBottom: "14px", border: "1px solid #EDE7DA" },
   bookingRow: { display: "flex", gap: "16px", alignItems: "center" },
   bookingImg: { width: "80px", height: "80px", objectFit: "cover", borderRadius: "4px" },

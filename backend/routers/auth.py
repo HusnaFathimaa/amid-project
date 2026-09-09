@@ -83,3 +83,23 @@ def reset_password(data: ResetData, db: Session = Depends(get_db)):
     user.password_hash = hashed.decode("utf-8")
     db.commit()
     return {"message": "Password reset successfully!"}
+class AdminSignupData(BaseModel):
+    name: str
+    email: str
+    password: str
+
+@router.post("/admin-signup")
+def admin_signup(data: AdminSignupData, db: Session = Depends(get_db)):
+    existing = db.query(models.User).filter(models.User.email == data.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    hashed = bcrypt.hashpw(data.password.encode("utf-8"), bcrypt.gensalt())
+    new_user = models.User(
+        name=data.name,
+        email=data.email,
+        password_hash=hashed.decode("utf-8"),
+        role="admin"
+    )
+    db.add(new_user)
+    db.commit()
+    return {"message": "Admin account created!"}

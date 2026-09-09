@@ -2,6 +2,7 @@ import ResetPassword from "./pages/ResetPassword";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Signup from "./pages/Signup";
 import Login from "./pages/Login";
+import AdminDashboard from "./pages/AdminDashboard";
 import VendorDashboard from "./pages/VendorDashboard";
 import ClientDashboard from "./pages/ClientDashboard";
 
@@ -16,6 +17,11 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/admin" element={
+        <ProtectedRoute allowedRole="admin">
+         <AdminDashboard />
+         </ProtectedRoute>
+          } />
         <Route path="/" element={<Navigate to="/signup" />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/reset-password" element={<ResetPassword />} />
