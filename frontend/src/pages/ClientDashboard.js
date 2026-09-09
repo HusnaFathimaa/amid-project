@@ -5,6 +5,22 @@ import logo from "./logo.jpg";
 
 const CATEGORIES = ["All", "Ethnic", "Party", "Wedding", "Casual", "Western"];
 
+const CATEGORY_TILES = [
+  { name: "Ethnic", image: "https://placehold.co/400x500/0D0D0D/C9A84C?text=Ethnic&font=playfair-display" },
+  { name: "Party", image: "https://placehold.co/400x500/0D0D0D/C9A84C?text=Party&font=playfair-display" },
+  { name: "Wedding", image: "https://placehold.co/400x500/0D0D0D/C9A84C?text=Wedding&font=playfair-display" },
+  { name: "Casual", image: "https://placehold.co/400x500/0D0D0D/C9A84C?text=Casual&font=playfair-display" },
+  { name: "Western", image: "https://placehold.co/400x500/0D0D0D/C9A84C?text=Western&font=playfair-display" },
+];
+
+const PRICE_RANGES = [
+  { label: "All Prices", min: 0, max: Infinity },
+  { label: "Under ₹500", min: 0, max: 500 },
+  { label: "₹500 – ₹1000", min: 500, max: 1000 },
+  { label: "₹1000 – ₹1500", min: 1000, max: 1500 },
+  { label: "Above ₹1500", min: 1500, max: Infinity },
+];
+
 // Dresses are named like "[Ethnic] Silk Saree" -- this pulls out the
 // category tag and the clean display name without touching the backend.
 function parseDress(dress) {
@@ -32,6 +48,7 @@ function ClientDashboard() {
   const [myBookings, setMyBookings] = useState([]);
   const [activeTab, setActiveTab] = useState("browse");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [activePriceRange, setActivePriceRange] = useState(PRICE_RANGES[0]);
   const [selectedDress, setSelectedDress] = useState(null);
   const [bookingForm, setBookingForm] = useState({
     rental_start: "", rental_end: "", delivery_address: ""
@@ -119,9 +136,9 @@ function ClientDashboard() {
   const logout = () => { localStorage.clear(); navigate("/login"); };
 
   const parsedDresses = dresses.map(parseDress).map(withDiscount);
-  const filteredDresses = activeCategory === "All"
-    ? parsedDresses
-    : parsedDresses.filter(d => d.category === activeCategory);
+  const filteredDresses = parsedDresses
+    .filter(d => activeCategory === "All" || d.category === activeCategory)
+    .filter(d => d.price_per_day >= activePriceRange.min && d.price_per_day <= activePriceRange.max);
 
   return (
     <div style={styles.container}>
@@ -159,13 +176,21 @@ function ClientDashboard() {
         {/* Browse Tab */}
         {activeTab === "browse" && (
           <div>
-            {/* Offers banner */}
-            <div style={styles.offerBanner}>
-              <div>
-                <p style={styles.offerTitle}>FESTIVE RENTAL SALE</p>
-                <p style={styles.offerSub}>Up to 40% off on select styles · Use code AMID20 for extra 20% off</p>
-              </div>
-              <span style={styles.offerBadge}>LIMITED TIME</span>
+            {/* Hero */}
+            <div style={styles.hero}>
+              <img src={logo} alt="AmId" style={styles.heroLogo} />
+              <p style={styles.heroTagline}>OWN THE LOOK</p>
+              <p style={styles.heroDesc}>India's premier dress rental marketplace — designer wear for every occasion, delivered to your door.</p>
+            </div>
+
+            {/* Category tiles */}
+            <div style={styles.tileGrid}>
+              {CATEGORY_TILES.map(tile => (
+                <div key={tile.name} style={styles.tile} onClick={() => setActiveCategory(tile.name)}>
+                  <img src={tile.image} alt={tile.name} style={styles.tileImg} />
+                  <p style={styles.tileLabel}>{tile.name}</p>
+                </div>
+              ))}
             </div>
 
             {/* Category chips */}
@@ -177,6 +202,19 @@ function ClientDashboard() {
                   onClick={() => setActiveCategory(cat)}
                 >
                   {cat}
+                </button>
+              ))}
+            </div>
+
+            {/* Price range chips */}
+            <div style={styles.categoryRow}>
+              {PRICE_RANGES.map(range => (
+                <button
+                  key={range.label}
+                  style={activePriceRange.label === range.label ? styles.categoryChipActive : styles.categoryChip}
+                  onClick={() => setActivePriceRange(range)}
+                >
+                  {range.label}
                 </button>
               ))}
             </div>
@@ -364,20 +402,17 @@ const styles = {
   },
   body: { padding: "32px" },
 
-  offerBanner: {
-    background: "linear-gradient(135deg, #0D0D0D 0%, #2A2210 100%)",
-    borderRadius: "8px", padding: "24px 28px", marginBottom: "28px",
-    display: "flex", justifyContent: "space-between", alignItems: "center",
-    border: "1px solid #C9A84C"
-  },
-  offerTitle: { margin: "0 0 6px", color: "#C9A84C", fontSize: "20px", fontFamily: "'Georgia', serif", letterSpacing: "1px", fontWeight: "700" },
-  offerSub: { margin: 0, color: "#DDD", fontSize: "13px" },
-  offerBadge: {
-    background: "#C9A84C", color: "#0D0D0D", padding: "6px 14px", borderRadius: "20px",
-    fontSize: "11px", fontWeight: "700", letterSpacing: "1px", whiteSpace: "nowrap"
-  },
+  hero: { textAlign: "center", padding: "20px 0 32px" },
+  heroLogo: { width: "80px", height: "80px", objectFit: "contain", marginBottom: "12px" },
+  heroTagline: { color: "#C9A84C", fontSize: "22px", letterSpacing: "6px", fontFamily: "'Georgia', serif", margin: "0 0 10px", fontWeight: "600" },
+  heroDesc: { color: "#888", fontSize: "14px", maxWidth: "480px", margin: "0 auto", lineHeight: "1.6" },
 
-  categoryRow: { display: "flex", gap: "10px", marginBottom: "28px", flexWrap: "wrap" },
+  tileGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "16px", marginBottom: "28px" },
+  tile: { cursor: "pointer", borderRadius: "6px", overflow: "hidden", border: "1px solid #EDE7DA", background: "#FFFFFF" },
+  tileImg: { width: "100%", height: "160px", objectFit: "cover" },
+  tileLabel: { textAlign: "center", padding: "10px", margin: 0, color: "#0D0D0D", fontFamily: "'Georgia', serif", fontWeight: "600", fontSize: "14px" },
+
+  categoryRow: { display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap" },
   categoryChip: {
     padding: "9px 20px", borderRadius: "20px", border: "1px solid #DDD",
     background: "#FFFFFF", color: "#555", fontSize: "13px", cursor: "pointer",
@@ -389,7 +424,7 @@ const styles = {
     fontWeight: "700", transition: "all 0.2s"
   },
 
-  sectionTitle: { margin: "0 0 20px", fontSize: "20px", color: "#0D0D0D", fontFamily: "'Georgia', serif", fontWeight: "600" },
+  sectionTitle: { margin: "20px 0 20px", fontSize: "20px", color: "#0D0D0D", fontFamily: "'Georgia', serif", fontWeight: "600" },
   resultCount: { color: "#AAA", fontSize: "15px", fontFamily: "'Arial', sans-serif", fontWeight: "400" },
 
   card: { background: "#FFFFFF", padding: "36px", borderRadius: "6px", maxWidth: "500px", border: "1px solid #EDE7DA" },
