@@ -24,8 +24,6 @@ function Login() {
       if (res.data.role === "vendor") navigate("/vendor");
       else if (res.data.role === "admin") navigate("/admin");
       else navigate("/client");
-      if (res.data.role === "vendor") navigate("/vendor");
-      else navigate("/client");
     } catch (err) {
       setMessage(err.response?.data?.detail || "Login failed");
     }
