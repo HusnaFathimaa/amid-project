@@ -3,8 +3,6 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import logo from "./logo.jpg";
 
-const CATEGORIES = ["All", "Ethnic", "Party", "Wedding", "Casual", "Western"];
-
 const CATEGORY_TILES = [
   { name: "Ethnic", image: "https://placehold.co/400x500/0D0D0D/C9A84C?text=Ethnic&font=playfair-display" },
   { name: "Party", image: "https://placehold.co/400x500/0D0D0D/C9A84C?text=Party&font=playfair-display" },
@@ -47,7 +45,8 @@ function ClientDashboard() {
   const [dresses, setDresses] = useState([]);
   const [myBookings, setMyBookings] = useState([]);
   const [activeTab, setActiveTab] = useState("browse");
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [browseView, setBrowseView] = useState("home"); // "home" or "category"
+  const [activeCategory, setActiveCategory] = useState(null);
   const [activePriceRange, setActivePriceRange] = useState(PRICE_RANGES[0]);
   const [selectedDress, setSelectedDress] = useState(null);
   const [bookingForm, setBookingForm] = useState({
@@ -76,6 +75,17 @@ function ClientDashboard() {
       const res = await axios.get(`https://amid-project.onrender.com/bookings/client/${client_id}`);
       setMyBookings(res.data);
     } catch (err) { console.log(err); }
+  };
+
+  const openCategory = (categoryName) => {
+    setActiveCategory(categoryName);
+    setActivePriceRange(PRICE_RANGES[0]);
+    setBrowseView("category");
+  };
+
+  const backToHome = () => {
+    setBrowseView("home");
+    setActiveCategory(null);
   };
 
   const handleBook = async (dress) => {
@@ -137,7 +147,7 @@ function ClientDashboard() {
 
   const parsedDresses = dresses.map(parseDress).map(withDiscount);
   const filteredDresses = parsedDresses
-    .filter(d => activeCategory === "All" || d.category === activeCategory)
+    .filter(d => d.category === activeCategory)
     .filter(d => d.price_per_day >= activePriceRange.min && d.price_per_day <= activePriceRange.max);
 
   return (
@@ -164,7 +174,7 @@ function ClientDashboard() {
       {/* Tabs */}
       <div style={styles.tabBar}>
         <button style={activeTab === "browse" ? styles.tabActive : styles.tab}
-          onClick={() => setActiveTab("browse")}>Browse Dresses</button>
+          onClick={() => { setActiveTab("browse"); setBrowseView("home"); }}>Browse Dresses</button>
         <button style={activeTab === "mybookings" ? styles.tabActive : styles.tab}
           onClick={() => setActiveTab("mybookings")}>My Bookings ({myBookings.length})</button>
         <button style={activeTab === "ai" ? styles.tabActive : styles.tab}
@@ -173,40 +183,51 @@ function ClientDashboard() {
 
       <div style={styles.body}>
 
-        {/* Browse Tab */}
-        {activeTab === "browse" && (
+        {/* Browse Tab -- HOME VIEW */}
+        {activeTab === "browse" && browseView === "home" && (
           <div>
-            {/* Hero */}
             <div style={styles.hero}>
               <img src={logo} alt="AmId" style={styles.heroLogo} />
               <p style={styles.heroTagline}>OWN THE LOOK</p>
               <p style={styles.heroDesc}>India's premier dress rental marketplace — designer wear for every occasion, delivered to your door.</p>
             </div>
 
-            {/* Category tiles */}
+            <div style={styles.offerBanner}>
+              <div>
+                <p style={styles.offerTitle}>FESTIVE RENTAL SALE</p>
+                <p style={styles.offerSub}>Up to 40% off on select styles this season</p>
+              </div>
+              <span style={styles.offerBadge}>LIMITED TIME</span>
+            </div>
+
+            <h3 style={styles.sectionTitle}>Shop by Category</h3>
             <div style={styles.tileGrid}>
               {CATEGORY_TILES.map(tile => (
-                <div key={tile.name} style={styles.tile} onClick={() => setActiveCategory(tile.name)}>
+                <div
+                  key={tile.name}
+                  style={styles.tile}
+                  onClick={() => openCategory(tile.name)}
+                  onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-6px)"; e.currentTarget.style.boxShadow = "0 12px 24px rgba(0,0,0,0.15)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
+                >
                   <img src={tile.image} alt={tile.name} style={styles.tileImg} />
                   <p style={styles.tileLabel}>{tile.name}</p>
                 </div>
               ))}
             </div>
+          </div>
+        )}
 
-            {/* Category chips */}
-            <div style={styles.categoryRow}>
-              {CATEGORIES.map(cat => (
-                <button
-                  key={cat}
-                  style={activeCategory === cat ? styles.categoryChipActive : styles.categoryChip}
-                  onClick={() => setActiveCategory(cat)}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+        {/* Browse Tab -- CATEGORY VIEW */}
+        {activeTab === "browse" && browseView === "category" && (
+          <div>
+            <button style={styles.backBtn} onClick={backToHome}>← Back to Categories</button>
 
-            {/* Price range chips */}
+            <h3 style={styles.sectionTitle}>
+              {activeCategory} Wear
+              <span style={styles.resultCount}> ({filteredDresses.length})</span>
+            </h3>
+
             <div style={styles.categoryRow}>
               {PRICE_RANGES.map(range => (
                 <button
@@ -219,12 +240,7 @@ function ClientDashboard() {
               ))}
             </div>
 
-            <h3 style={styles.sectionTitle}>
-              {activeCategory === "All" ? "Available Dresses" : `${activeCategory} Wear`}
-              <span style={styles.resultCount}> ({filteredDresses.length})</span>
-            </h3>
-
-            {filteredDresses.length === 0 && <p style={styles.empty}>No dresses available in this category yet.</p>}
+            {filteredDresses.length === 0 && <p style={styles.empty}>No dresses available in this range yet.</p>}
             <div style={styles.grid}>
               {filteredDresses.map(dress => (
                 <div key={dress.id} style={styles.dressCard}>
@@ -283,7 +299,7 @@ function ClientDashboard() {
             )}
             {message && <p style={styles.message}>{message}</p>}
             <div style={{ display: "flex", gap: "10px" }}>
-              <button style={styles.backBtn} onClick={() => setActiveTab("browse")}>Back</button>
+              <button style={styles.backBtnSmall} onClick={() => { setActiveTab("browse"); setBrowseView("category"); }}>Back</button>
               <button
                 style={styles.button}
                 onClick={submitBooking}
@@ -402,17 +418,30 @@ const styles = {
   },
   body: { padding: "32px" },
 
-  hero: { textAlign: "center", padding: "20px 0 32px" },
+  hero: { textAlign: "center", padding: "20px 0 28px" },
   heroLogo: { width: "80px", height: "80px", objectFit: "contain", marginBottom: "12px" },
   heroTagline: { color: "#C9A84C", fontSize: "22px", letterSpacing: "6px", fontFamily: "'Georgia', serif", margin: "0 0 10px", fontWeight: "600" },
   heroDesc: { color: "#888", fontSize: "14px", maxWidth: "480px", margin: "0 auto", lineHeight: "1.6" },
 
-  tileGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "16px", marginBottom: "28px" },
-  tile: { cursor: "pointer", borderRadius: "6px", overflow: "hidden", border: "1px solid #EDE7DA", background: "#FFFFFF" },
-  tileImg: { width: "100%", height: "160px", objectFit: "cover" },
-  tileLabel: { textAlign: "center", padding: "10px", margin: 0, color: "#0D0D0D", fontFamily: "'Georgia', serif", fontWeight: "600", fontSize: "14px" },
+  offerBanner: {
+    background: "linear-gradient(135deg, #0D0D0D 0%, #2A2210 100%)",
+    borderRadius: "8px", padding: "22px 26px", marginBottom: "32px",
+    display: "flex", justifyContent: "space-between", alignItems: "center",
+    border: "1px solid #C9A84C"
+  },
+  offerTitle: { margin: "0 0 6px", color: "#C9A84C", fontSize: "18px", fontFamily: "'Georgia', serif", letterSpacing: "1px", fontWeight: "700" },
+  offerSub: { margin: 0, color: "#DDD", fontSize: "13px" },
+  offerBadge: {
+    background: "#C9A84C", color: "#0D0D0D", padding: "6px 14px", borderRadius: "20px",
+    fontSize: "11px", fontWeight: "700", letterSpacing: "1px", whiteSpace: "nowrap"
+  },
 
-  categoryRow: { display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap" },
+  tileGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "18px" },
+  tile: { cursor: "pointer", borderRadius: "6px", overflow: "hidden", border: "1px solid #EDE7DA", background: "#FFFFFF", transition: "transform 0.2s, box-shadow 0.2s" },
+  tileImg: { width: "100%", height: "200px", objectFit: "cover" },
+  tileLabel: { textAlign: "center", padding: "12px", margin: 0, color: "#0D0D0D", fontFamily: "'Georgia', serif", fontWeight: "600", fontSize: "15px" },
+
+  categoryRow: { display: "flex", gap: "10px", marginBottom: "24px", flexWrap: "wrap" },
   categoryChip: {
     padding: "9px 20px", borderRadius: "20px", border: "1px solid #DDD",
     background: "#FFFFFF", color: "#555", fontSize: "13px", cursor: "pointer",
@@ -424,7 +453,7 @@ const styles = {
     fontWeight: "700", transition: "all 0.2s"
   },
 
-  sectionTitle: { margin: "20px 0 20px", fontSize: "20px", color: "#0D0D0D", fontFamily: "'Georgia', serif", fontWeight: "600" },
+  sectionTitle: { margin: "0 0 20px", fontSize: "20px", color: "#0D0D0D", fontFamily: "'Georgia', serif", fontWeight: "600" },
   resultCount: { color: "#AAA", fontSize: "15px", fontFamily: "'Arial', sans-serif", fontWeight: "400" },
 
   card: { background: "#FFFFFF", padding: "36px", borderRadius: "6px", maxWidth: "500px", border: "1px solid #EDE7DA" },
@@ -483,6 +512,11 @@ const styles = {
     marginBottom: "8px", transition: "all 0.2s"
   },
   backBtn: {
+    padding: "10px 20px", background: "transparent", color: "#0D0D0D",
+    border: "1px solid #DDD", borderRadius: "4px", fontSize: "13px",
+    cursor: "pointer", fontWeight: "600", marginBottom: "24px"
+  },
+  backBtnSmall: {
     padding: "16px 24px", background: "transparent", color: "#555",
     border: "1px solid #DDD", borderRadius: "4px", fontSize: "13px",
     cursor: "pointer", letterSpacing: "1px", textTransform: "uppercase", fontWeight: "600"
